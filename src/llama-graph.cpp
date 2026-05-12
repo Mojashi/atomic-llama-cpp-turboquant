@@ -2103,7 +2103,6 @@ ggml_tensor * llm_graph_context::build_attn(
     ggml_tensor * k = k_cur;
     ggml_tensor * v = v_cur;
 
-        fprintf(stderr, "DBG attn_mha INPUT q=[%lld,%lld,%lld,%lld] k=[%lld,%lld,%lld,%lld] v=[%lld,%lld,%lld,%lld]\n", q->ne[0],q->ne[1],q->ne[2],q->ne[3], k->ne[0],k->ne[1],k->ne[2],k->ne[3], v->ne[0],v->ne[1],v->ne[2],v->ne[3]);
     ggml_tensor * cur = build_attn_mha(q, k, v, kq_b, kq_mask, sinks, v_mla, kq_scale, il);
     cb(cur, "kqv_out", il);
 
@@ -2216,7 +2215,6 @@ ggml_tensor * llm_graph_context::build_attn(
         q = ggml_turbo_wht(ctx0, q, 0, 0, innerq_scale);  // 0 = forward, 0 = auto group size from q->ne[0]
     }
 
-        fprintf(stderr, "DBG attn_mha INPUT q=[%lld,%lld,%lld,%lld] k=[%lld,%lld,%lld,%lld] v=[%lld,%lld,%lld,%lld]\n", q->ne[0],q->ne[1],q->ne[2],q->ne[3], k->ne[0],k->ne[1],k->ne[2],k->ne[3], v->ne[0],v->ne[1],v->ne[2],v->ne[3]);
     ggml_tensor * cur = build_attn_mha(q, k, v, kq_b, kq_mask, sinks, v_mla, kq_scale, il);
     cb(cur, "kqv_out", il);
 
@@ -2335,7 +2333,6 @@ ggml_tensor * llm_graph_context::build_attn(
         q = ggml_turbo_wht(ctx0, q, 0, 0, innerq_scale);  // 0 = forward, 0 = auto group size
     }
 
-        fprintf(stderr, "DBG attn_mha INPUT q=[%lld,%lld,%lld,%lld] k=[%lld,%lld,%lld,%lld] v=[%lld,%lld,%lld,%lld]\n", q->ne[0],q->ne[1],q->ne[2],q->ne[3], k->ne[0],k->ne[1],k->ne[2],k->ne[3], v->ne[0],v->ne[1],v->ne[2],v->ne[3]);
     ggml_tensor * cur = build_attn_mha(q, k, v, kq_b, kq_mask, sinks, v_mla, kq_scale, il);
     cb(cur, "kqv_out", il);
 
@@ -2446,7 +2443,6 @@ ggml_tensor * llm_graph_context::build_attn(
         q = ggml_turbo_wht(ctx0, q, 0, 0, innerq_scale);
     }
 
-        fprintf(stderr, "DBG attn_mha INPUT q=[%lld,%lld,%lld,%lld] k=[%lld,%lld,%lld,%lld] v=[%lld,%lld,%lld,%lld]\n", q->ne[0],q->ne[1],q->ne[2],q->ne[3], k->ne[0],k->ne[1],k->ne[2],k->ne[3], v->ne[0],v->ne[1],v->ne[2],v->ne[3]);
     ggml_tensor * cur = build_attn_mha(q, k, v, kq_b, kq_mask, sinks, v_mla, kq_scale, il);
     cb(cur, "kqv_out", il);
 
@@ -2532,10 +2528,8 @@ ggml_tensor * llm_graph_context::build_attn_mtp(
         q = ggml_turbo_wht(ctx0, q, 0, 0, innerq_scale);
     }
 
-        fprintf(stderr, "DBG attn_mha INPUT q=[%lld,%lld,%lld,%lld] k=[%lld,%lld,%lld,%lld] v=[%lld,%lld,%lld,%lld]\n", q->ne[0],q->ne[1],q->ne[2],q->ne[3], k->ne[0],k->ne[1],k->ne[2],k->ne[3], v->ne[0],v->ne[1],v->ne[2],v->ne[3]);
     ggml_tensor * cur = build_attn_mha(q, k, v, kq_b, kq_mask, sinks, v_mla, kq_scale, il_mtp);
     cb(cur, "kqv_out_mtp", il_mtp);
-    fprintf(stderr, "DBG attn_mha OUTPUT cur=[%lld,%lld,%lld,%lld]\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3]);
 
     if (v->type == GGML_TYPE_TURBO3_0 || v->type == GGML_TYPE_TURBO4_0 || v->type == GGML_TYPE_TURBO2_0) {
         const int64_t orig_v_head   = kv_embd_head_v;
@@ -2603,7 +2597,6 @@ ggml_tensor * llm_graph_context::build_attn(
     ggml_tensor * k = k_cur;
     ggml_tensor * v = v_cur;
 
-        fprintf(stderr, "DBG attn_mha INPUT q=[%lld,%lld,%lld,%lld] k=[%lld,%lld,%lld,%lld] v=[%lld,%lld,%lld,%lld]\n", q->ne[0],q->ne[1],q->ne[2],q->ne[3], k->ne[0],k->ne[1],k->ne[2],k->ne[3], v->ne[0],v->ne[1],v->ne[2],v->ne[3]);
     ggml_tensor * cur = build_attn_mha(q, k, v, kq_b, kq_mask, sinks, v_mla, kq_scale, il);
     cb(cur, "kqv_out", il);
 

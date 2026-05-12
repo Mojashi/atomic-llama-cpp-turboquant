@@ -9,7 +9,6 @@ static llm_graph_params graph_params_for_mtp(llm_graph_params p, const llama_mod
     // MTP one-step always processes a single token. Override ubatch sizes
     // so gctx.n_tokens (and all downstream pos/attn input shapes) reflect
     // this, not the target prefill batch size.
-    p.n_outputs           = 1;
     p.ubatch.n_tokens     = 1;
     p.ubatch.n_seq_tokens = 1;
     p.ubatch.n_seqs       = 1;
@@ -76,7 +75,6 @@ static void gemma4_mtp_build_one_step(
 
     ggml_tensor * tok_e = ggml_get_rows(ctx0, target.tok_embd, tok_step);
     cb(tok_e, "mtp_tgt_tok_embd", -1);
-    fprintf(stderr, "DBG tok_e ne=[%lld,%lld,%lld,%lld]\n", tok_e->ne[0],tok_e->ne[1],tok_e->ne[2],tok_e->ne[3]);
 
     // Gemma 4 scales token embeddings by sqrt(n_embd) at the input pipeline (gemma4-iswa.cpp).
     // Use target n_embd so Edge / non-Edge targets match the main forward.
@@ -85,11 +83,9 @@ static void gemma4_mtp_build_one_step(
 
     ggml_tensor * inp_cat = ggml_concat(ctx0, tok_e, h_step, 0);
     cb(inp_cat, "mtp_concat", -1);
-    fprintf(stderr, "DBG inp_cat ne=[%lld,%lld,%lld,%lld]\n", inp_cat->ne[0],inp_cat->ne[1],inp_cat->ne[2],inp_cat->ne[3]);
 
     ggml_tensor * inpL = gctx.build_lora_mm(mtp.mtp_pre_projection, inp_cat);
     cb(inpL, "mtp_pre_proj_out", -1);
-    fprintf(stderr, "DBG inpL ne=[%lld,%lld,%lld,%lld]\n", inpL->ne[0],inpL->ne[1],inpL->ne[2],inpL->ne[3]);
 
     ggml_build_forward_expand(gf, inpL);
 
@@ -115,7 +111,6 @@ static void gemma4_mtp_build_one_step(
 
         ggml_tensor * Qcur = gctx.build_lora_mm(mtp.layers[il].wq, cur);
         cb(Qcur, "Qcur", il);
-        fprintf(stderr, "DBG Qcur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", Qcur->ne[0],Qcur->ne[1],Qcur->ne[2],Qcur->ne[3], il);
 
         // Fix: MTP one-step always processes a single token (inp_h is [n_bb, 1]).
         // gctx.n_tokens reflects the target prefill batch (e.g. 26) and is wrong
@@ -128,7 +123,6 @@ static void gemma4_mtp_build_one_step(
 
         Qcur = ggml_rope_ext(ctx0, Qcur, pos_step, freq_factors, n_rot_l, rope_type, n_ctx_orig, freq_base_l, freq_scale_l,
                              ext_factor, attn_factor, beta_fast, beta_slow);
-        fprintf(stderr, "DBG Qcur_pos ne=[%lld,%lld,%lld,%lld] (il=%d)\n", Qcur->ne[0],Qcur->ne[1],Qcur->ne[2],Qcur->ne[3], il);
         cb(Qcur, "Qcur_pos", il);
 
         const bool read_swa = hparams.is_swa(il);
@@ -152,16 +146,13 @@ static void gemma4_mtp_build_one_step(
         const int64_t kv_embd_head_v = target.hparams.n_embd_head_v(il_kv);
         const int64_t kv_n_head_v    = target.hparams.n_head_kv(il_kv);
 
-        fprintf(stderr, "DBG before-attn cur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3], il);
         cur = gctx.build_attn_mtp(inp_attn, mtp.layers[il].wo, nullptr, Qcur, nullptr, nullptr, nullptr,
                 hparams.f_attention_scale, il, il_kv, read_swa, kv_embd_head_v, kv_n_head_v, use_k_as_v);
 
         cur = gctx.build_norm(cur, mtp.layers[il].attn_post_norm, nullptr, LLM_NORM_RMS, il);
         cb(cur, "attn_post_norm", il);
-        fprintf(stderr, "DBG attn_out cur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3], il);
 
         ggml_tensor * attn_out = ggml_add(ctx0, cur, inpL);
-        fprintf(stderr, "DBG attn_out add ne=[%lld,%lld,%lld,%lld] (il=%d)\n", attn_out->ne[0],attn_out->ne[1],attn_out->ne[2],attn_out->ne[3], il);
         cb(attn_out, "attn_out", il);
 
         GGML_ASSERT(mtp.layers[il].ffn_gate_inp == nullptr && "gemma4_assistant MTP does not support MoE FFN");
@@ -190,7 +181,6 @@ static void gemma4_mtp_build_one_step(
         cur = gctx.build_cvec(cur, il);
         cb(cur, "l_out", il);
 
-        fprintf(stderr, "DBG end-of-layer cur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3], il);
         inpL = cur;
     }
 
