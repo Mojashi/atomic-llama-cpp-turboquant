@@ -9,6 +9,7 @@ static llm_graph_params graph_params_for_mtp(llm_graph_params p, const llama_mod
     // MTP one-step always processes a single token. Override ubatch sizes
     // so gctx.n_tokens (and all downstream pos/attn input shapes) reflect
     // this, not the target prefill batch size.
+    p.n_outputs           = 1;
     p.ubatch.n_tokens     = 1;
     p.ubatch.n_seq_tokens = 1;
     p.ubatch.n_seqs       = 1;
