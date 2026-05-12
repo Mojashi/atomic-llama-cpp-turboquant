@@ -106,7 +106,11 @@ static void gemma4_mtp_build_one_step(
         ggml_tensor * Qcur = gctx.build_lora_mm(mtp.layers[il].wq, cur);
         cb(Qcur, "Qcur", il);
 
-        Qcur = ggml_reshape_3d(ctx0, Qcur, n_embd_head, n_head, n_tokens);
+        // Fix: MTP one-step always processes a single token (inp_h is [n_bb, 1]).
+        // gctx.n_tokens reflects the target prefill batch (e.g. 26) and is wrong
+        // here, tripping GGML_ASSERT(ggml_nelements(a) == ne0*ne1*ne2). The
+        // matching code below (~line 194) asserts n_tokens_mtp == 1.
+        Qcur = ggml_reshape_3d(ctx0, Qcur, n_embd_head, n_head, 1);
 
         Qcur = gctx.build_norm(Qcur, mtp.layers[il].attn_q_norm, nullptr, LLM_NORM_RMS, il);
         cb(Qcur, "Qcur_normed", il);
