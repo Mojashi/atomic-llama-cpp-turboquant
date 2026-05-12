@@ -128,6 +128,7 @@ static void gemma4_mtp_build_one_step(
 
         Qcur = ggml_rope_ext(ctx0, Qcur, pos_step, freq_factors, n_rot_l, rope_type, n_ctx_orig, freq_base_l, freq_scale_l,
                              ext_factor, attn_factor, beta_fast, beta_slow);
+        fprintf(stderr, "DBG Qcur_pos ne=[%lld,%lld,%lld,%lld] (il=%d)\n", Qcur->ne[0],Qcur->ne[1],Qcur->ne[2],Qcur->ne[3], il);
         cb(Qcur, "Qcur_pos", il);
 
         const bool read_swa = hparams.is_swa(il);
@@ -151,13 +152,16 @@ static void gemma4_mtp_build_one_step(
         const int64_t kv_embd_head_v = target.hparams.n_embd_head_v(il_kv);
         const int64_t kv_n_head_v    = target.hparams.n_head_kv(il_kv);
 
+        fprintf(stderr, "DBG before-attn cur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3], il);
         cur = gctx.build_attn_mtp(inp_attn, mtp.layers[il].wo, nullptr, Qcur, nullptr, nullptr, nullptr,
                 hparams.f_attention_scale, il, il_kv, read_swa, kv_embd_head_v, kv_n_head_v, use_k_as_v);
 
         cur = gctx.build_norm(cur, mtp.layers[il].attn_post_norm, nullptr, LLM_NORM_RMS, il);
         cb(cur, "attn_post_norm", il);
+        fprintf(stderr, "DBG attn_out cur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3], il);
 
         ggml_tensor * attn_out = ggml_add(ctx0, cur, inpL);
+        fprintf(stderr, "DBG attn_out add ne=[%lld,%lld,%lld,%lld] (il=%d)\n", attn_out->ne[0],attn_out->ne[1],attn_out->ne[2],attn_out->ne[3], il);
         cb(attn_out, "attn_out", il);
 
         GGML_ASSERT(mtp.layers[il].ffn_gate_inp == nullptr && "gemma4_assistant MTP does not support MoE FFN");
