@@ -190,6 +190,7 @@ static void gemma4_mtp_build_one_step(
         cur = gctx.build_cvec(cur, il);
         cb(cur, "l_out", il);
 
+        fprintf(stderr, "DBG end-of-layer cur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", cur->ne[0],cur->ne[1],cur->ne[2],cur->ne[3], il);
         inpL = cur;
     }
 
