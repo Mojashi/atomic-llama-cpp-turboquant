@@ -76,6 +76,7 @@ static void gemma4_mtp_build_one_step(
 
     ggml_tensor * tok_e = ggml_get_rows(ctx0, target.tok_embd, tok_step);
     cb(tok_e, "mtp_tgt_tok_embd", -1);
+    fprintf(stderr, "DBG tok_e ne=[%lld,%lld,%lld,%lld]\n", tok_e->ne[0],tok_e->ne[1],tok_e->ne[2],tok_e->ne[3]);
 
     // Gemma 4 scales token embeddings by sqrt(n_embd) at the input pipeline (gemma4-iswa.cpp).
     // Use target n_embd so Edge / non-Edge targets match the main forward.
@@ -84,9 +85,11 @@ static void gemma4_mtp_build_one_step(
 
     ggml_tensor * inp_cat = ggml_concat(ctx0, tok_e, h_step, 0);
     cb(inp_cat, "mtp_concat", -1);
+    fprintf(stderr, "DBG inp_cat ne=[%lld,%lld,%lld,%lld]\n", inp_cat->ne[0],inp_cat->ne[1],inp_cat->ne[2],inp_cat->ne[3]);
 
     ggml_tensor * inpL = gctx.build_lora_mm(mtp.mtp_pre_projection, inp_cat);
     cb(inpL, "mtp_pre_proj_out", -1);
+    fprintf(stderr, "DBG inpL ne=[%lld,%lld,%lld,%lld]\n", inpL->ne[0],inpL->ne[1],inpL->ne[2],inpL->ne[3]);
 
     ggml_build_forward_expand(gf, inpL);
 
@@ -112,6 +115,7 @@ static void gemma4_mtp_build_one_step(
 
         ggml_tensor * Qcur = gctx.build_lora_mm(mtp.layers[il].wq, cur);
         cb(Qcur, "Qcur", il);
+        fprintf(stderr, "DBG Qcur ne=[%lld,%lld,%lld,%lld] (il=%d)\n", Qcur->ne[0],Qcur->ne[1],Qcur->ne[2],Qcur->ne[3], il);
 
         // Fix: MTP one-step always processes a single token (inp_h is [n_bb, 1]).
         // gctx.n_tokens reflects the target prefill batch (e.g. 26) and is wrong
